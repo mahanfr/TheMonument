@@ -43,7 +43,7 @@ int main(void) {
             (int[1]){ 0 },
             SHADER_UNIFORM_INT);
 
-    Image sb_image = LoadImage("./assets/skybox/corona_up.png");
+    Image sb_image = LoadImage("./assets/skybox.png");
     skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(sb_image, CUBEMAP_LAYOUT_AUTO_DETECT);
     UnloadImage(sb_image);
 
