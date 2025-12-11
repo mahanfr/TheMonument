@@ -6,11 +6,11 @@ int main(void) {
 
     Model model = LoadModel("./assets/SpaceShipV1.obj");
     Camera3D camera = {0};
-    camera.position = (Vector3){ 5.0f, 4.0f, 5.0f };    // Camera position
-    camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };      // Camera looking at point
-    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
-    camera.fovy = 45.0f;                                // Camera field-of-view Y
-    camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
+    camera.position = (Vector3){ 5.0f, 4.0f, 5.0f };
+    camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };
+    camera.fovy = 45.0f;
+    camera.projection = CAMERA_PERSPECTIVE;
 
     Mesh cube = GenMeshCube(1.0f, 1.0f, 1.0f);
     Model skybox = LoadModelFromMesh(cube);
@@ -47,6 +47,20 @@ int main(void) {
     skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture = LoadTextureCubemap(sb_image, CUBEMAP_LAYOUT_AUTO_DETECT);
     UnloadImage(sb_image);
 
+    // BASIC LIGHTING
+    Shader shdrLight = LoadShader(
+            "./assets/shaders/glsl330/basic_lighting.vs",
+            "./assets/shaders/glsl330/basic_lighting.fs");
+    float ambientStrength = 0.5;
+    Vector4 ambientColor = ColorNormalize(RAYWHITE);
+    SetShaderValue(
+            shdrLight,
+            GetShaderLocation(shdrLight, "ambientColor"),
+            &(Vector3) {ambientColor.x, ambientColor.y, ambientColor.z},
+            SHADER_UNIFORM_VEC3);
+    SetShaderValue(shdrLight, GetShaderLocation(shdrLight, "ambientStrength"), &ambientStrength, SHADER_UNIFORM_FLOAT);
+    model.materials[0].shader = shdrLight;
+
     SetTargetFPS(60);
     while (!WindowShouldClose()) {
         UpdateCamera(&camera, CAMERA_FIRST_PERSON);
@@ -66,6 +80,7 @@ int main(void) {
     }
     UnloadShader(skybox.materials[0].shader);
     UnloadTexture(skybox.materials[0].maps[MATERIAL_MAP_CUBEMAP].texture);
+    UnloadShader(shdrLight);
 
     UnloadModel(skybox);
     UnloadModel(model);
