@@ -7,7 +7,7 @@
 #define NOB_IMPLEMENTATION
 #include "nob.h"
 
-bool EDIT_MODE = false;
+bool EDIT_MODE = true;
 
 int main(void) {
     InitWindow(800, 600, "The Monument");
@@ -32,6 +32,7 @@ int main(void) {
                 }
                 if (command.count > 0) command.count--;
             } else if (IsKeyPressed(KEY_ENTER)) {
+                editor_cmd_run(game, command.items);
                 command.items[0] = 0;
                 command.count = 0;
             } else {
@@ -57,7 +58,8 @@ int main(void) {
                 DrawGrid(10, 1.0f);
             EndMode3D();
 
-            if (EDIT_MODE) cmd_draw(game, &command);
+            if (EDIT_MODE) editor_cmd_draw(game, &command);
+            DrawFPS(10, 10);
         EndDrawing();
     }
     game_distroy(game);
