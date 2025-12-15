@@ -15,7 +15,7 @@ typedef struct {
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
-    //ModelID modelid;
+    int modelid;
     Model model;
 } GameEntity;
 

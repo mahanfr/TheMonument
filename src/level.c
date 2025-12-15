@@ -24,7 +24,7 @@ static void write_entity(FILE *f, GameEntity *entity) {
     fwrite(&token, sizeof(LevelToken), 1, f);
     fwrite(&entity->id, sizeof(int), 1, f);
     fwrite(&entity->position, sizeof(Vector3), 1, f);
-    //fwrite(&entity->modelid, sizeof(int), 1, f);
+    fwrite(&entity->modelid, sizeof(int), 1, f);
 }
 
 static GameEntity load_entity(FILE *f) {
@@ -39,7 +39,7 @@ static GameEntity load_entity(FILE *f) {
         .id = id,
         .position = position,
         .model = model,
-     //   .modelid = model_id,
+        .modelid = model_id,
     };
     return entity;
 }

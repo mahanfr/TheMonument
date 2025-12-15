@@ -14,6 +14,7 @@ int main(void) {
 
     Game *game = game_init();
     game_load_level(game);
+    editor_cmd_init();
 
     SetTargetFPS(60);
     Nob_String_Builder command = {0};
@@ -58,11 +59,12 @@ int main(void) {
                 DrawGrid(10, 1.0f);
             EndMode3D();
 
-            if (EDIT_MODE) editor_cmd_draw(game, &command);
             DrawFPS(10, 10);
+            if (EDIT_MODE) editor_cmd_draw(game, &command);
         EndDrawing();
     }
     game_distroy(game);
+    editor_cmd_distroy();
     CloseWindow();
     return 0;
 }
