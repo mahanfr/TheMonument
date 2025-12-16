@@ -1,4 +1,5 @@
 #include "game.h"
+#include "player.h"
 #include "sun_light.h"
 #include "skybox.h"
 #include <raylib.h>
@@ -7,7 +8,7 @@
 #define NOB_IMPLEMENTATION
 #include "nob.h"
 
-bool EDIT_MODE = true;
+bool EDIT_CMD_MODE = false;
 
 int main(void) {
     InitWindow(800, 600, "The Monument");
@@ -17,50 +18,34 @@ int main(void) {
     editor_cmd_init();
 
     SetTargetFPS(60);
-    Nob_String_Builder command = {0};
-
     while (!WindowShouldClose()) {
-        if (!EDIT_MODE) {
+        if (!EDIT_CMD_MODE && game->is_edit_mode)
             UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);
-        }
+        else player_update_camera(game);
 
-        sunlight_update(game->sun, game->camera.position);
+        if (IsKeyPressed(KEY_F1)) game->is_edit_mode = !game->is_edit_mode;
+        if (IsKeyPressed(KEY_GRAVE)) EDIT_CMD_MODE = !EDIT_CMD_MODE;
+        if (EDIT_CMD_MODE) editor_cmd_handle_controls(game);
+        else player_handle_controls(game);
 
-        if (EDIT_MODE) {
-            if (IsKeyPressed(KEY_BACKSPACE)) {
-                if (command.count > 0) {
-                    command.items[command.count-1] = 0;
-                }
-                if (command.count > 0) command.count--;
-            } else if (IsKeyPressed(KEY_ENTER)) {
-                editor_cmd_run(game, command.items);
-                command.items[0] = 0;
-                command.count = 0;
-            } else {
-                char ch = GetCharPressed();
-                if (ch != 0) {
-                    nob_sb_appendf(&command, "%c", ch);
-                }
-            }
-        }
-        if (IsKeyPressed(KEY_F1)) EDIT_MODE = !EDIT_MODE;
-
-
+        sunlight_update(game);
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
             BeginMode3D(game->camera);
                 skybox_render(game->skybox);
 
-                for (size_t i = 0; i < game->entities.count; ++i) {
-                    GameEntity entity = game->entities.items[i];
-                    DrawModel(entity.model, entity.position, 1.0f, WHITE);
-                }
-
-                DrawGrid(10, 1.0f);
+                game_render(game);
+                if (game->is_edit_mode) DrawGrid(20, 1.0f);
             EndMode3D();
 
             DrawFPS(10, 10);
-            if (EDIT_MODE) editor_cmd_draw(game, &command);
+            DrawText(
+                    TextFormat("x: %.2f, y: %.2f, z: %.2f",
+                        game->player->position.x,
+                        game->player->position.y,
+                        game->player->position.z),
+                    10, 30, 10, WHITE);
+            if (EDIT_CMD_MODE) editor_cmd_draw();
         EndDrawing();
     }
     game_distroy(game);

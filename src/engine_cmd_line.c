@@ -1,3 +1,4 @@
+#include "engine_cmd_line.h"
 #include "game.h"
 #include "level.h"
 #include "nob.h"
@@ -15,6 +16,7 @@ static char *cmd_history[MAX_HISTORY] = {0};
 static size_t histrory_cur = 0;
 static Nob_String_Builder notstdio;
 static Font cmd_font;
+static Nob_String_Builder command = {0};
 
 static void draw_text(const char *text, int posX, int posY, int fontSize, Color color) {
     DrawTextEx(cmd_font, text, (Vector2) {posX, posY}, fontSize, 1, color);
@@ -55,7 +57,6 @@ void editor_cmd_save_history() {
 
 
 void editor_cmd_run(Game *game, char* cmdline) {
-    (void) game;
     // cmd_history[histrory_cur] = malloc(strlen(cmdline));
     // strcpy(cmd_history[histrory_cur], cmdline);
     // histrory_cur++;
@@ -103,15 +104,32 @@ void editor_cmd_run(Game *game, char* cmdline) {
     }
 }
 
-void editor_cmd_draw(Game *game, Nob_String_Builder *command) {
-    (void) game;
+void editor_cmd_handle_controls(Game *game) {
+    if (IsKeyPressed(KEY_BACKSPACE)) {
+        if (command.count > 0) {
+            command.items[command.count-1] = 0;
+        }
+        if (command.count > 0) command.count--;
+    } else if (IsKeyPressed(KEY_ENTER)) {
+        editor_cmd_run(game, command.items);
+        command.items[0] = 0;
+        command.count = 0;
+    } else {
+        char ch = GetCharPressed();
+        if (ch != 0) {
+            nob_sb_appendf(&command, "%c", ch);
+        }
+    }
+}
+
+void editor_cmd_draw() {
     int screen_w = GetScreenWidth();
     int screen_h = GetScreenHeight();
     int line_h = 30;
     DrawRectangle(0, 10, screen_w, screen_h / 2, GetColor(0x18181899));
     draw_text(notstdio.items, 10, 15, 20, RAYWHITE);
     DrawRectangle(0, screen_h - (line_h + 20), screen_w, line_h, GetColor(0x181818aa));
-    draw_text(command->items, 10, screen_h - (line_h + 15), 20, RAYWHITE);
+    draw_text(command.items, 10, screen_h - (line_h + 15), 20, RAYWHITE);
 }
 
 void editor_cmd_distroy() {

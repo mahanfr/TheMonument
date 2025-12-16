@@ -36,6 +36,7 @@ void sunlight_apply(Game *game) {
     for(int i=0; i < game->entities.count; i++) {
         game->entities.items[i].model.materials[0].shader = game->sun->shader;
     }
+    game->player->model.materials[0].shader = game->sun->shader;
 }
 
 void sunlight_set_direction(SunLight *sun, Vector3 new_direction) {
@@ -43,9 +44,9 @@ void sunlight_set_direction(SunLight *sun, Vector3 new_direction) {
     SetShaderValue(sun->shader, lightDirectionLoc, &new_direction, SHADER_UNIFORM_VEC3);
 }
 
-void sunlight_update(SunLight *sun, Vector3 camera_position) {
-    int viewPositionLoc   = GetShaderLocation(sun->shader,"viewPosition");
-    SetShaderValue(sun->shader, viewPositionLoc, &camera_position, SHADER_UNIFORM_VEC3);
+void sunlight_update(Game *game) {
+    int viewPositionLoc = GetShaderLocation(game->sun->shader,"viewPosition");
+    SetShaderValue(game->sun->shader, viewPositionLoc, &game->camera.position, SHADER_UNIFORM_VEC3);
 }
 
 void sunlight_distroy(SunLight *sun) {

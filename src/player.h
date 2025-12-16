@@ -1,14 +1,11 @@
-#ifndef _PLAYER_HEADER
-#define _PLAYER_HEADER
-#pragma once
+#ifndef PLAYER_HEADER
+#define PLAYER_HEADER
+#include "game.h"
 #include "raylib.h"
 
-typedef struct {
-    long id;
-    Vector3 position;
-    Vector3 rotation;
-    Vector3 scale;
-    Model model;
-} Player;
+void player_init(Game *game);
+void player_update_camera(Game *game);
+void player_distroy(Player *player);
+void player_handle_controls(Game *game);
 
 #endif

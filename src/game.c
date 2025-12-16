@@ -1,9 +1,10 @@
+#include "player.h"
 #include "sun_light.h"
 #include "skybox.h"
 #include "game.h"
 #include "level.h"
+#include <raylib.h>
 #include <stdlib.h>
-
 
 Game *game_init(void) {
     Game *game = malloc(sizeof(Game));
@@ -31,11 +32,30 @@ void game_load_level(Game *game) {
     // };
     // da_append(&game->entities, entity);
     // level_save(game);
+    player_init(game);
     level_load(game);
     sunlight_apply(game);
 }
 
+void game_render(Game *game) {
+    DrawModel(game->player->model, game->player->position, 1.0f, WHITE);
+    for (size_t i = 0; i < game->entities.count; ++i) {
+        GameEntity entity = game->entities.items[i];
+        DrawModel(entity.model, entity.position, 1.0f, WHITE);
+        if (game->is_edit_mode) {
+            BoundingBox bound = GetModelBoundingBox(entity.model);
+            DrawBoundingBox(bound, WHITE);
+            Vector3 centerPos = Vector3Scale(Vector3Add(bound.max, bound.min), 0.5);
+            DrawSphere(centerPos, 0.5f, RED);
+            DrawCylinderEx(centerPos, Vector3Add(centerPos, (Vector3) {1.5f,0,0}), 0.09, 0, 10, GREEN);
+            DrawCylinderEx(centerPos, Vector3Add(centerPos, (Vector3) {0,1.5f,0}), 0.09, 0, 10, RED);
+            DrawCylinderEx(centerPos, Vector3Add(centerPos, (Vector3) {0,0,1.5f}), 0.09, 0, 10, YELLOW);
+        }
+    }
+}
+
 void game_distroy(Game *game) {
+    player_distroy(game->player);
     for (int i = 0; i < game->entities.count; ++i) {
         UnloadModel(game->entities.items[i].model);
     }

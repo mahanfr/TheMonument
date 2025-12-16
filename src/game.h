@@ -6,7 +6,15 @@
 
 typedef Model Skybox;
 typedef struct SunLight SunLight;
-typedef struct Player Player;
+
+typedef struct {
+    long id;
+    Vector3 position;
+    Vector3 rotation;
+    Vector3 scale;
+    int modelid;
+    Model model;
+} Player;
 
 typedef struct {} Light;
 
@@ -32,10 +40,12 @@ typedef struct {
 
     Player *player;
     GameEntities entities;
-}Game;
+    bool is_edit_mode;
+} Game;
 
 Game *game_init(void);
 void game_distroy(Game *game);
 void game_load_level(Game *game);
+void game_render(Game *game);
 
 #endif
