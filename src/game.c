@@ -1,4 +1,6 @@
+#include "engine_cmd_line.h"
 #include "player.h"
+#include "raylib.h"
 #include "sun_light.h"
 #include "skybox.h"
 #include "game.h"
@@ -32,16 +34,36 @@ void game_load_level(Game *game) {
     // };
     // da_append(&game->entities, entity);
     // level_save(game);
+    Mesh planet_mesh = GenMeshSphere(100.0f, 20, 20);
+    Model planet = LoadModelFromMesh(planet_mesh);
+    Image image = LoadImage("./assets/textures/Gaseous_01.png");
+    Texture texture = LoadTextureFromImage(image);
+    SetMaterialTexture(&planet.materials[0], MATERIAL_MAP_ALBEDO, texture);
+    planet.materials->maps->color = WHITE;
+    GameEntity planet_entity = (GameEntity) {
+        .id = 0,
+        .position = (Vector3) {0.0, 0.0, 400},
+        .rotation = (Vector3) {1, 1, 1},
+        .scale = (Vector3) {1.0f, 1.0f, 1.0f},
+        .model = planet,
+        .modelid = 100,
+    };
+    nob_da_append(&game->entities, planet_entity);
     player_init(game);
     level_load(game);
     sunlight_apply(game);
 }
 
 void game_render(Game *game) {
-    DrawModel(game->player->model, game->player->position, 1.0f, WHITE);
+    // DrawModel(game->player->model, game->player->position, 1.0f, WHITE);
+    rlPushMatrix();
+        rlRotatef(game->player->rotation.z * RAD2DEG, 0, 0, 1);
+        DrawModelEx(game->player->model, game->player->position, Vector3Zero(), 0, Vector3One(), WHITE);
+    rlPopMatrix();
     for (size_t i = 0; i < game->entities.count; ++i) {
         GameEntity entity = game->entities.items[i];
-        DrawModel(entity.model, entity.position, 1.0f, WHITE);
+        // DrawModel(entity.model, entity.position, 1.0f, WHITE);
+        DrawModelEx(entity.model, entity.position, entity.rotation, 100.0f, entity.scale, WHITE);
         if (game->is_edit_mode) {
             BoundingBox bound = GetModelBoundingBox(entity.model);
             DrawBoundingBox(bound, WHITE);

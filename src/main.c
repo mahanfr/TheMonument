@@ -17,7 +17,9 @@ int main(void) {
     game_load_level(game);
     editor_cmd_init();
 
+    SetTraceLogLevel(LOG_WARNING);
     SetTargetFPS(60);
+    DisableCursor();
     while (!WindowShouldClose()) {
         if (!EDIT_CMD_MODE && game->is_edit_mode)
             UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);
@@ -45,6 +47,12 @@ int main(void) {
                         game->player->position.y,
                         game->player->position.z),
                     10, 30, 10, WHITE);
+            DrawText(
+                    TextFormat("x: %.2f, y: %.2f, z: %.2f",
+                        game->player->rotation.x,
+                        game->player->rotation.y,
+                        game->player->rotation.z),
+                    10, 50, 10, WHITE);
             if (EDIT_CMD_MODE) editor_cmd_draw();
         EndDrawing();
     }
