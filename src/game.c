@@ -20,6 +20,7 @@ Game *game_init(void) {
 
     game->skybox = skybox_init("./assets/skybox.png");
     game->sun = sunlight_init(GetColor(0x404040FF), WHITE, 32.0f);
+    game->settings = (GameSettings) {.resolution = (Vector2) {GetScreenWidth(), GetScreenHeight()}};
     sunlight_set_direction(game->sun, (Vector3) {-0.3f,-1.0f,-0.3f});
     return game;
 }
@@ -56,10 +57,7 @@ void game_load_level(Game *game) {
 
 void game_render(Game *game) {
     // DrawModel(game->player->model, game->player->position, 1.0f, WHITE);
-    rlPushMatrix();
-        rlRotatef(game->player->rotation.z * RAD2DEG, 0, 0, 1);
-        DrawModelEx(game->player->model, game->player->position, Vector3Zero(), 0, Vector3One(), WHITE);
-    rlPopMatrix();
+    player_draw(game);
     for (size_t i = 0; i < game->entities.count; ++i) {
         GameEntity entity = game->entities.items[i];
         // DrawModel(entity.model, entity.position, 1.0f, WHITE);

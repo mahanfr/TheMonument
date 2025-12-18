@@ -20,6 +20,7 @@ int main(void) {
     SetTraceLogLevel(LOG_WARNING);
     SetTargetFPS(60);
     DisableCursor();
+    SetMousePosition(800/2, 600/2);
     while (!WindowShouldClose()) {
         if (!EDIT_CMD_MODE && game->is_edit_mode)
             UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);

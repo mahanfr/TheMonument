@@ -7,5 +7,6 @@ void player_init(Game *game);
 void player_update_camera(Game *game);
 void player_distroy(Player *player);
 void player_handle_controls(Game *game);
+void player_draw(Game *game);
 
 #endif

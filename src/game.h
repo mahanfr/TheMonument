@@ -34,6 +34,10 @@ typedef struct{
 } GameEntities;
 
 typedef struct {
+    Vector2 resolution;
+} GameSettings;
+
+typedef struct {
     Camera camera;
     Skybox *skybox;
     SunLight *sun;
@@ -41,6 +45,7 @@ typedef struct {
     Player *player;
     GameEntities entities;
     bool is_edit_mode;
+    GameSettings settings;
 } Game;
 
 Game *game_init(void);
