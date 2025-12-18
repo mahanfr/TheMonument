@@ -31,30 +31,37 @@ void player_update_camera(Game *game) {
 
 void player_handle_controls(Game *game) {
     float dt = GetFrameTime();
-
     Vector2 mouse = GetMouseDelta();
 
-    Quaternion qYaw   = QuaternionFromAxisAngle((Vector3){1, 0, 0}, -mouse.x * mouseSensitivity);
-    Quaternion qPitch = QuaternionFromAxisAngle((Vector3){0, 1, 0}, -mouse.y * mouseSensitivity);
+    // --- local axes from current orientation ---
+    Vector3 forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
+    Vector3 up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+    Vector3 right   = Vector3Normalize(Vector3CrossProduct(up, forward));
+
+    // --- mouse look (LOCAL axes) ---
+    Quaternion qYaw   = QuaternionFromAxisAngle(up,    -mouse.x * mouseSensitivity);
+    Quaternion qPitch = QuaternionFromAxisAngle(right, -mouse.y * mouseSensitivity);
 
     orientation = QuaternionMultiply(qYaw, orientation);
     orientation = QuaternionMultiply(qPitch, orientation);
 
+    // --- roll (LOCAL forward axis) ---
     if (IsKeyDown(KEY_A)) {
-        Vector3 localForward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
-        Quaternion qRoll = QuaternionFromAxisAngle(localForward, rollSpeed * dt);
+        Quaternion qRoll = QuaternionFromAxisAngle(forward, rollSpeed * dt);
         orientation = QuaternionMultiply(qRoll, orientation);
     }
     if (IsKeyDown(KEY_D)) {
-        Vector3 localForward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
-        Quaternion qRoll = QuaternionFromAxisAngle(localForward, -rollSpeed * dt);
+        Quaternion qRoll = QuaternionFromAxisAngle(forward, -rollSpeed * dt);
         orientation = QuaternionMultiply(qRoll, orientation);
     }
 
     orientation = QuaternionNormalize(orientation);
 
-    Vector3 forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
-    Vector3 up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+    // --- recompute basis after rotation ---
+    forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
+    up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+
+    // --- thrust ---
     if (IsKeyDown(KEY_W))
         velocity = Vector3Add(velocity, Vector3Scale(forward, thrust * dt));
     if (IsKeyDown(KEY_S))
@@ -63,15 +70,10 @@ void player_handle_controls(Game *game) {
     position = Vector3Add(position, Vector3Scale(velocity, dt));
     velocity = Vector3Scale(velocity, damping);
 
-    Vector3 cameraOffset = Vector3RotateByQuaternion(
-            (Vector3){ -cameraDistance, 0, 3.0f },
-            orientation
-            );
-
+    // --- camera ---
     game->camera.position = Vector3Subtract(position, Vector3Scale(forward, cameraDistance));
     game->camera.target   = Vector3Add(position, forward);
     game->camera.up       = up;
-
 }
 
 void player_draw(Game *game) {
