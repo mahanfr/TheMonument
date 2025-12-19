@@ -1,18 +1,18 @@
 #include "player.h"
 #include "rmanager.h"
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <raylib.h>
 
-Vector3 position = { 0 };
-Vector3 velocity = { 0 };
+static Vector3 position = { 0 };
+static Vector3 velocity = { 0 };
+static Vector3 angularVelocity = { 0 };
 
-Quaternion orientation;
+static Quaternion orientation;
 
-const float mouseSensitivity = 0.003f;
+const float mouseSensitivity = 0.033f;
 const float rollSpeed = 2.5f;
-const float thrust = 25.0f;
+const float thrust = 35.0f;
 const float damping = 0.995f;
 
 const float cameraDistance = 22.0f;
@@ -33,6 +33,17 @@ void player_update_camera(Game *game) {
 void player_handle_controls(Game *game) {
     float dt = GetFrameTime();
     Vector2 mouse = GetMouseDelta();
+    float targetYawRate   = -mouse.x * mouseSensitivity;
+    float targetPitchRate = -mouse.y * mouseSensitivity;
+    if (fabsf(mouse.x) < 1.0f) targetYawRate = 0;
+    if (fabsf(mouse.y) < 1.0f) targetPitchRate = 0;
+    float steeringResponsiveness = 20.0f; // higher = snappier
+
+    angularVelocity.y += (targetYawRate   - angularVelocity.y) * steeringResponsiveness * dt;
+    angularVelocity.x += (targetPitchRate - angularVelocity.x) * steeringResponsiveness * dt;
+    angularVelocity.x = Clamp(angularVelocity.x, -2.5f, 2.5f);
+    angularVelocity.y = Clamp(angularVelocity.y, -2.5f, 2.5f);
+
 
     // --- local axes from current orientation ---
     Vector3 forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
@@ -40,8 +51,8 @@ void player_handle_controls(Game *game) {
     Vector3 right   = Vector3Normalize(Vector3CrossProduct(up, forward));
 
     // --- mouse look (LOCAL axes) ---
-    Quaternion qYaw   = QuaternionFromAxisAngle(up,    -mouse.x * mouseSensitivity);
-    Quaternion qPitch = QuaternionFromAxisAngle(right, -mouse.y * mouseSensitivity);
+    Quaternion qYaw   = QuaternionFromAxisAngle(up,    angularVelocity.y * dt);
+    Quaternion qPitch = QuaternionFromAxisAngle(right, angularVelocity.x * dt);
 
     orientation = QuaternionMultiply(qYaw, orientation);
     orientation = QuaternionMultiply(qPitch, orientation);
@@ -61,6 +72,7 @@ void player_handle_controls(Game *game) {
     // --- recompute basis after rotation ---
     forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
     up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+    right   = Vector3Normalize(Vector3CrossProduct(up, forward));
 
     // --- thrust ---
     if (IsKeyDown(KEY_W))
@@ -81,6 +93,7 @@ void player_handle_controls(Game *game) {
     game->camera.position = cameraPos;
     game->camera.target   = Vector3Add(position, Vector3Scale(forward, 10.0f));
     game->camera.up       = up;
+    game->player->position = position;
 }
 
 void player_draw(Game *game) {

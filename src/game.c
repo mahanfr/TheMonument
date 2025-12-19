@@ -1,6 +1,5 @@
 #include "engine_cmd_line.h"
 #include "player.h"
-#include "raylib.h"
 #include "sun_light.h"
 #include "skybox.h"
 #include "game.h"
@@ -39,6 +38,7 @@ void game_load_level(Game *game) {
     Model planet = LoadModelFromMesh(planet_mesh);
     Image image = LoadImage("./assets/textures/Gaseous_01.png");
     Texture texture = LoadTextureFromImage(image);
+    SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR);
     SetMaterialTexture(&planet.materials[0], MATERIAL_MAP_ALBEDO, texture);
     planet.materials->maps->color = WHITE;
     GameEntity planet_entity = (GameEntity) {
