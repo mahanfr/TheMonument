@@ -16,6 +16,7 @@ const float thrust = 25.0f;
 const float damping = 0.995f;
 
 const float cameraDistance = 22.0f;
+const float cameraHeight = 10.3f;
 
 void player_init(Game *game) {
     Player *player = malloc(sizeof(Player));
@@ -71,8 +72,14 @@ void player_handle_controls(Game *game) {
     velocity = Vector3Scale(velocity, damping);
 
     // --- camera ---
-    game->camera.position = Vector3Subtract(position, Vector3Scale(forward, cameraDistance));
-    game->camera.target   = Vector3Add(position, forward);
+    Vector3 cameraPos =
+    Vector3Subtract(position, Vector3Scale(forward, cameraDistance));
+
+    // lift camera upward in ship-local space
+    cameraPos = Vector3Add(cameraPos, Vector3Scale(up, 8.0f));
+
+    game->camera.position = cameraPos;
+    game->camera.target   = Vector3Add(position, Vector3Scale(forward, 10.0f));
     game->camera.up       = up;
 }
 

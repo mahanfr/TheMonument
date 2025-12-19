@@ -43,7 +43,7 @@ void game_load_level(Game *game) {
     planet.materials->maps->color = WHITE;
     GameEntity planet_entity = (GameEntity) {
         .id = 0,
-        .position = (Vector3) {0.0, 0.0, 400},
+        .position = (Vector3) {400.0, 0.0, 0.0},
         .rotation = (Vector3) {1, 1, 1},
         .scale = (Vector3) {1.0f, 1.0f, 1.0f},
         .model = planet,
@@ -61,7 +61,7 @@ void game_render(Game *game) {
     for (size_t i = 0; i < game->entities.count; ++i) {
         GameEntity entity = game->entities.items[i];
         // DrawModel(entity.model, entity.position, 1.0f, WHITE);
-        DrawModelEx(entity.model, entity.position, entity.rotation, 100.0f, entity.scale, WHITE);
+        DrawModelEx(entity.model, entity.position, entity.rotation, 0.0f, entity.scale, WHITE);
         if (game->is_edit_mode) {
             BoundingBox bound = GetModelBoundingBox(entity.model);
             DrawBoundingBox(bound, WHITE);
