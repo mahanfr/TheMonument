@@ -1,8 +1,12 @@
 #include "player.h"
+#include "engine_cmd_line.h"
 #include "rmanager.h"
 #include <math.h>
 #include <stdlib.h>
 #include <raylib.h>
+#include "sun_light.h"
+#define RLIGHTS_IMPLEMENTATION
+#include "../raylib/include/rlights.h"
 #include <string.h>
 
 static const float mouseSensitivity = 0.033f;
@@ -22,6 +26,20 @@ void player_init(Game *game) {
     player->model = LoadModel(ModelPaths[RES_MODEL_SPACESHIPV1]);
     player->velocity = (Vector3) { 0.0f, 0.0f, 0.0f };
     player->angularVelocity = (Vector3) { 0.0f, 0.0f, 0.0f };
+
+    // thrusters light shaders
+    Shader tlshader = LoadShader(
+            "./assets/shaders/glsl330/lighting.vs",
+            "./assets/shaders/glsl330/lighting.fs");
+
+    tlshader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(tlshader, "viewPos");
+    int ambientLoc = GetShaderLocation(tlshader, "ambient");
+    SetShaderValue(tlshader, ambientLoc, (float[4]){ 0.0f, 0.0f, 0.0f, 0.0f }, SHADER_UNIFORM_VEC4);
+    nob_da_append(&player->localShaders, tlshader);
+    Light light1 = CreateLight(LIGHT_POINT, Vector3Zero(), Vector3Zero(), GREEN, nob_da_last(&player->localShaders));
+    nob_da_append(&player->lights, light1);
+    Light light2 = CreateLight(LIGHT_POINT, Vector3Zero(), Vector3Zero(), GREEN, nob_da_last(&player->localShaders));
+    nob_da_append(&player->lights, light2);
 
     game->player = player;
 }
@@ -79,6 +97,24 @@ void player_handle_controls(Game *game) {
     player->position = Vector3Add(player->position, Vector3Scale(player->velocity, dt));
     player->velocity = Vector3Scale(player->velocity, damping);
 
+    // --- lights ---
+    {
+        Vector3 lightOffsetLocal = { -6.0f, 5.0f, 0.0f };
+        Vector3 lightOffsetWorld =
+            Vector3RotateByQuaternion(lightOffsetLocal, player->rotation);
+        player->lights.items[0].position =
+            Vector3Add(player->position, lightOffsetWorld);
+        UpdateLightValues(player->localShaders.items[0], player->lights.items[0]);
+    }
+    {
+        Vector3 lightOffsetLocal = { -6.0f, -5.0f, 0.0f };
+        Vector3 lightOffsetWorld =
+            Vector3RotateByQuaternion(lightOffsetLocal, player->rotation);
+        player->lights.items[1].position =
+            Vector3Add(player->position, lightOffsetWorld);
+        UpdateLightValues(player->localShaders.items[0], player->lights.items[1]);
+    }
+
     // --- camera ---
     Vector3 cameraPos =
     Vector3Subtract(player->position, Vector3Scale(forward, cameraDistance));
@@ -91,7 +127,7 @@ void player_handle_controls(Game *game) {
     game->camera.up       = up;
 }
 
-void player_draw(Game *game) {
+static void draw_player_model(Game *game) {
     Quaternion modelCorrectionFlip =
     QuaternionFromAxisAngle((Vector3){0, 0, 1}, PI);
 
@@ -113,6 +149,21 @@ void player_draw(Game *game) {
         rlMultMatrixf(MatrixToFloat(shipTransform));
         DrawModelEx(game->player->model, Vector3Zero(), Vector3Zero(), 0, Vector3One(), WHITE);
     rlPopMatrix();
+}
+
+void player_draw(Game *game) {
+    sunlight_reapply(game, game->player->model);
+    draw_player_model(game);
+    BeginBlendMode(BLEND_ADDITIVE);
+        game->player->model.materials[0].shader = game->player->localShaders.items[0];
+        draw_player_model(game);
+    EndBlendMode();
+    if (game->is_edit_mode) {
+        Lights lights = game->player->lights;
+        for(size_t i = 0; i < lights.count; ++i) {
+            DrawSphereEx(lights.items[i].position, 0.2f, 8, 8, lights.items[i].color);
+        }
+    }
 }
 
 void player_distroy(Player *player) {

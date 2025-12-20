@@ -11,4 +11,5 @@ void sunlight_apply(Game *game);
 void sunlight_set_direction(SunLight *sun, Vector3 new_direction);
 void sunlight_update(Game *game);
 void sunlight_distroy(SunLight *sun);
+void sunlight_reapply(Game *game, Model model);
 #endif

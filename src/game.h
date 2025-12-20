@@ -3,9 +3,22 @@
 
 #include "raylib.h"
 #include "stddef.h"
+#include "../raylib/include/rlights.h"
 
 typedef Model Skybox;
 typedef struct SunLight SunLight;
+
+typedef struct {
+    Shader *items;
+    size_t count;
+    size_t capacity;
+} Shaders;
+
+typedef struct {
+    Light *items;
+    size_t count;
+    size_t capacity;
+} Lights;
 
 typedef struct {
     long id;
@@ -16,9 +29,9 @@ typedef struct {
     Vector3 velocity;
     Vector3 angularVelocity;
     Quaternion rotation;
+    Shaders localShaders;
+    Lights lights;
 } Player;
-
-typedef struct {} Light;
 
 typedef struct {
     long id;
@@ -54,5 +67,6 @@ Game *game_init(void);
 void game_distroy(Game *game);
 void game_load_level(Game *game);
 void game_render(Game *game);
+void game_prerender(Game *game);
 
 #endif

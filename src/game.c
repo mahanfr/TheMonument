@@ -74,6 +74,12 @@ void game_render(Game *game) {
     }
 }
 
+void game_prerender(Game *game) {
+    sunlight_update(game);
+    Shader tlshader = game->player->localShaders.items[0];
+    SetShaderValue(tlshader, tlshader.locs[SHADER_LOC_VECTOR_VIEW], &game->camera.position, SHADER_UNIFORM_VEC3);
+}
+
 void game_distroy(Game *game) {
     player_distroy(game->player);
     for (int i = 0; i < game->entities.count; ++i) {

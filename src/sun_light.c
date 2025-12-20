@@ -39,6 +39,10 @@ void sunlight_apply(Game *game) {
     game->player->model.materials[0].shader = game->sun->shader;
 }
 
+void sunlight_reapply(Game *game, Model model) {
+    model.materials[0].shader = game->sun->shader;
+}
+
 void sunlight_set_direction(SunLight *sun, Vector3 new_direction) {
     int lightDirectionLoc = GetShaderLocation(sun->shader,"lightDirection");
     SetShaderValue(sun->shader, lightDirectionLoc, &new_direction, SHADER_UNIFORM_VEC3);

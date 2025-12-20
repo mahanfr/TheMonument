@@ -1,6 +1,5 @@
-#ifndef _RAYLIB_HEADER
-#define _RAYLIB_HEADER
-#pragma once
+#ifndef RAYLIB_HEADER
+#define RAYLIB_HEADER
 
 #include "../raylib/include/raylib.h"
 #include "../raylib/include/rlgl.h"

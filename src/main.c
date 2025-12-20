@@ -11,6 +11,7 @@
 bool EDIT_CMD_MODE = false;
 
 int main(void) {
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(800, 600, "The Monument");
 
     Game *game = game_init();
@@ -22,13 +23,13 @@ int main(void) {
     DisableCursor();
     while (!WindowShouldClose()) {
         if (EDIT_CMD_MODE) editor_cmd_handle_controls(game);
-        else if (game->is_edit_mode) UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);
+        else if (game->is_edit_mode) UpdateCamera(&game->camera, CAMERA_FREE);
         else player_handle_controls(game);
 
         if (IsKeyPressed(KEY_F1)) game->is_edit_mode = !game->is_edit_mode;
         if (IsKeyPressed(KEY_GRAVE)) EDIT_CMD_MODE = !EDIT_CMD_MODE;
 
-        sunlight_update(game);
+        game_prerender(game);
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
             BeginMode3D(game->camera);
@@ -51,6 +52,12 @@ int main(void) {
                         game->player->rotation.y * 180,
                         game->player->rotation.z * 180),
                     10, 50, 10, WHITE);
+            DrawText(
+                    TextFormat("x: %.2f, y: %.2f, z: %.2f",
+                        game->player->velocity.x,
+                        game->player->velocity.y,
+                        game->player->velocity.z),
+                    10, 70, 10, WHITE);
             if (EDIT_CMD_MODE) editor_cmd_draw();
         EndDrawing();
     }
