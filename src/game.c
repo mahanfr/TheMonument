@@ -51,7 +51,7 @@ void game_load_level(Game *game) {
     };
     nob_da_append(&game->entities, planet_entity);
     player_init(game);
-    level_load(game);
+    //level_load(game);
     sunlight_apply(game);
 }
 

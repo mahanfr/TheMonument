@@ -3,97 +3,92 @@
 #include <math.h>
 #include <stdlib.h>
 #include <raylib.h>
+#include <string.h>
 
-static Vector3 position = { 0 };
-static Vector3 velocity = { 0 };
-static Vector3 angularVelocity = { 0 };
+static const float mouseSensitivity = 0.033f;
+static const float rollSpeed = 2.5f;
+static const float thrust = 35.0f;
+static const float damping = 0.995f;
+static const float steeringResponsiveness = 20.0f;
 
-static Quaternion orientation;
-
-const float mouseSensitivity = 0.033f;
-const float rollSpeed = 2.5f;
-const float thrust = 35.0f;
-const float damping = 0.995f;
-
-const float cameraDistance = 22.0f;
-const float cameraHeight = 10.3f;
+static const float cameraDistance = 22.0f;
+static const float cameraHeight = 10.3f;
 
 void player_init(Game *game) {
     Player *player = malloc(sizeof(Player));
-    player->position = Vector3Zero();
-    player->rotation = Vector3Zero();
+    memset(player, 0, sizeof(Player));
+    player->position = (Vector3) {0.0f, 0.0f, 0.0f};
+    player->rotation = (Quaternion) { 0.0f, 0.0f, 0.0f, 1.0f };
     player->model = LoadModel(ModelPaths[RES_MODEL_SPACESHIPV1]);
-    game->player = player;
-    orientation = QuaternionIdentity();
-}
+    player->velocity = (Vector3) { 0.0f, 0.0f, 0.0f };
+    player->angularVelocity = (Vector3) { 0.0f, 0.0f, 0.0f };
 
-void player_update_camera(Game *game) {
+    game->player = player;
 }
 
 void player_handle_controls(Game *game) {
+    Player *player = game->player;
+
     float dt = GetFrameTime();
     Vector2 mouse = GetMouseDelta();
     float targetYawRate   = -mouse.x * mouseSensitivity;
     float targetPitchRate = -mouse.y * mouseSensitivity;
     if (fabsf(mouse.x) < 1.0f) targetYawRate = 0;
     if (fabsf(mouse.y) < 1.0f) targetPitchRate = 0;
-    float steeringResponsiveness = 20.0f; // higher = snappier
 
-    angularVelocity.y += (targetYawRate   - angularVelocity.y) * steeringResponsiveness * dt;
-    angularVelocity.x += (targetPitchRate - angularVelocity.x) * steeringResponsiveness * dt;
-    angularVelocity.x = Clamp(angularVelocity.x, -2.5f, 2.5f);
-    angularVelocity.y = Clamp(angularVelocity.y, -2.5f, 2.5f);
-
+    player->angularVelocity.y += (targetYawRate   - player->angularVelocity.y) * steeringResponsiveness * dt;
+    player->angularVelocity.x += (targetPitchRate - player->angularVelocity.x) * steeringResponsiveness * dt;
+    player->angularVelocity.x = Clamp(player->angularVelocity.x, -2.5f, 2.5f);
+    player->angularVelocity.y = Clamp(player->angularVelocity.y, -2.5f, 2.5f);
 
     // --- local axes from current orientation ---
-    Vector3 forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
-    Vector3 up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+    Vector3 forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, player->rotation);
+    Vector3 up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, player->rotation);
     Vector3 right   = Vector3Normalize(Vector3CrossProduct(up, forward));
 
     // --- mouse look (LOCAL axes) ---
-    Quaternion qYaw   = QuaternionFromAxisAngle(up,    angularVelocity.y * dt);
-    Quaternion qPitch = QuaternionFromAxisAngle(right, angularVelocity.x * dt);
+    Quaternion qYaw   = QuaternionFromAxisAngle(up,    player->angularVelocity.y * dt);
+    Quaternion qPitch = QuaternionFromAxisAngle(right, player->angularVelocity.x * dt);
 
-    orientation = QuaternionMultiply(qYaw, orientation);
-    orientation = QuaternionMultiply(qPitch, orientation);
+    player->rotation = QuaternionMultiply(qYaw,   player->rotation);
+    player->rotation = QuaternionMultiply(qPitch, player->rotation);
 
     // --- roll (LOCAL forward axis) ---
     if (IsKeyDown(KEY_A)) {
         Quaternion qRoll = QuaternionFromAxisAngle(forward, rollSpeed * dt);
-        orientation = QuaternionMultiply(qRoll, orientation);
+        player->rotation = QuaternionMultiply(qRoll, player->rotation);
     }
     if (IsKeyDown(KEY_D)) {
         Quaternion qRoll = QuaternionFromAxisAngle(forward, -rollSpeed * dt);
-        orientation = QuaternionMultiply(qRoll, orientation);
+        player->rotation = QuaternionMultiply(qRoll, player->rotation);
     }
 
-    orientation = QuaternionNormalize(orientation);
+    player->rotation = QuaternionNormalize(player->rotation);
 
     // --- recompute basis after rotation ---
-    forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, orientation);
-    up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, orientation);
+    forward = Vector3RotateByQuaternion((Vector3){1, 0, 0}, player->rotation);
+    up      = Vector3RotateByQuaternion((Vector3){0, 0, 1}, player->rotation);
     right   = Vector3Normalize(Vector3CrossProduct(up, forward));
 
     // --- thrust ---
     if (IsKeyDown(KEY_W))
-        velocity = Vector3Add(velocity, Vector3Scale(forward, thrust * dt));
+        player->velocity = Vector3Add(player->velocity, Vector3Scale(forward, thrust * dt));
     if (IsKeyDown(KEY_S))
-        velocity = Vector3Subtract(velocity, Vector3Scale(forward, thrust * dt));
+        player->velocity = Vector3Subtract(player->velocity, Vector3Scale(forward, thrust * dt));
 
-    position = Vector3Add(position, Vector3Scale(velocity, dt));
-    velocity = Vector3Scale(velocity, damping);
+    player->position = Vector3Add(player->position, Vector3Scale(player->velocity, dt));
+    player->velocity = Vector3Scale(player->velocity, damping);
 
     // --- camera ---
     Vector3 cameraPos =
-    Vector3Subtract(position, Vector3Scale(forward, cameraDistance));
+    Vector3Subtract(player->position, Vector3Scale(forward, cameraDistance));
 
     // lift camera upward in ship-local space
     cameraPos = Vector3Add(cameraPos, Vector3Scale(up, 8.0f));
 
     game->camera.position = cameraPos;
-    game->camera.target   = Vector3Add(position, Vector3Scale(forward, 10.0f));
+    game->camera.target   = Vector3Add(player->position, Vector3Scale(forward, 10.0f));
     game->camera.up       = up;
-    game->player->position = position;
 }
 
 void player_draw(Game *game) {
@@ -111,8 +106,8 @@ void player_draw(Game *game) {
 
     Matrix shipTransform =
             MatrixMultiply(
-                QuaternionToMatrix(QuaternionMultiply(orientation, modelCorrection)),
-                MatrixTranslate(position.x, position.y, position.z)
+                QuaternionToMatrix(QuaternionMultiply(game->player->rotation, modelCorrection)),
+                MatrixTranslate(game->player->position.x, game->player->position.y, game->player->position.z)
             );
     rlPushMatrix();
         rlMultMatrixf(MatrixToFloat(shipTransform));

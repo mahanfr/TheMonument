@@ -20,16 +20,13 @@ int main(void) {
     SetTraceLogLevel(LOG_WARNING);
     SetTargetFPS(60);
     DisableCursor();
-    SetMousePosition(800/2, 600/2);
     while (!WindowShouldClose()) {
-        if (!EDIT_CMD_MODE && game->is_edit_mode)
-            UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);
-        else player_update_camera(game);
+        if (EDIT_CMD_MODE) editor_cmd_handle_controls(game);
+        else if (game->is_edit_mode) UpdateCamera(&game->camera, CAMERA_FIRST_PERSON);
+        else player_handle_controls(game);
 
         if (IsKeyPressed(KEY_F1)) game->is_edit_mode = !game->is_edit_mode;
         if (IsKeyPressed(KEY_GRAVE)) EDIT_CMD_MODE = !EDIT_CMD_MODE;
-        if (EDIT_CMD_MODE) editor_cmd_handle_controls(game);
-        else player_handle_controls(game);
 
         sunlight_update(game);
         BeginDrawing();
@@ -50,9 +47,9 @@ int main(void) {
                     10, 30, 10, WHITE);
             DrawText(
                     TextFormat("x: %.2f, y: %.2f, z: %.2f",
-                        game->player->rotation.x,
-                        game->player->rotation.y,
-                        game->player->rotation.z),
+                        game->player->rotation.x * 180,
+                        game->player->rotation.y * 180,
+                        game->player->rotation.z * 180),
                     10, 50, 10, WHITE);
             if (EDIT_CMD_MODE) editor_cmd_draw();
         EndDrawing();

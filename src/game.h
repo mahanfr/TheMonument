@@ -10,10 +10,12 @@ typedef struct SunLight SunLight;
 typedef struct {
     long id;
     Vector3 position;
-    Vector3 rotation;
     Vector3 scale;
     int modelid;
     Model model;
+    Vector3 velocity;
+    Vector3 angularVelocity;
+    Quaternion rotation;
 } Player;
 
 typedef struct {} Light;
