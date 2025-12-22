@@ -1,6 +1,5 @@
 #include "game.h"
 #include "player.h"
-#include "sun_light.h"
 #include "skybox.h"
 #include <raylib.h>
 #include <stddef.h>

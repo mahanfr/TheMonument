@@ -6,7 +6,7 @@
 #include <raylib.h>
 #include "sun_light.h"
 #define RLIGHTS_IMPLEMENTATION
-#include "../raylib/include/rlights.h"
+#include "rlights.h"
 #include <string.h>
 
 static const float mouseSensitivity = 0.033f;
@@ -98,6 +98,14 @@ void player_handle_controls(Game *game) {
     player->velocity = Vector3Scale(player->velocity, damping);
 
     // --- lights ---
+    if (fabsf(player->velocity.x) > 10.0f) {
+        player->lights.items[0].enabled = true;
+        player->lights.items[1].enabled = true;
+    } else {
+        player->lights.items[0].enabled = false;
+        player->lights.items[1].enabled = false;
+    }
+
     {
         Vector3 lightOffsetLocal = { -6.0f, 5.0f, 0.0f };
         Vector3 lightOffsetWorld =
