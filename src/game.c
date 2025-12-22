@@ -9,6 +9,7 @@
 
 Game *game_init(void) {
     Game *game = malloc(sizeof(Game));
+    memset(game, 0, sizeof(Game));
     Camera3D camera = {0};
     camera.position = (Vector3){ 5.0f, 4.0f, 5.0f };
     camera.target = (Vector3){ 0.0f, 2.0f, 0.0f };

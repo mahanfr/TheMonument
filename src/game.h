@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 #include "stddef.h"
-#include "rlights.h"
+#include "lights.h"
 
 typedef Model Skybox;
 typedef struct SunLight SunLight;

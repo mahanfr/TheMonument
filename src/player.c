@@ -2,11 +2,13 @@
 #include "engine_cmd_line.h"
 #include "rmanager.h"
 #include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include "sun_light.h"
 #define RLIGHTS_IMPLEMENTATION
-#include "rlights.h"
+#include "lights.h"
 #include <string.h>
 
 static const float mouseSensitivity = 0.033f;
@@ -44,6 +46,7 @@ void player_init(Game *game) {
     game->player = player;
 }
 
+static float speed = 0.0f;
 void player_handle_controls(Game *game) {
     Player *player = game->player;
 
@@ -89,21 +92,27 @@ void player_handle_controls(Game *game) {
     right   = Vector3Normalize(Vector3CrossProduct(up, forward));
 
     // --- thrust ---
-    if (IsKeyDown(KEY_W))
+    if (IsKeyDown(KEY_W)) {
+        speed += 0.1 * dt;
         player->velocity = Vector3Add(player->velocity, Vector3Scale(forward, thrust * dt));
-    if (IsKeyDown(KEY_S))
-        player->velocity = Vector3Subtract(player->velocity, Vector3Scale(forward, thrust * dt));
+    } else {
+        if (speed > 0) speed -= 0.1 * dt;
+    }
+    if (IsKeyDown(KEY_S)) {
+        speed -= 0.1 * dt;
+        player->velocity = Vector3Add(player->velocity, Vector3Scale(forward, -thrust * dt));
+    }
 
     player->position = Vector3Add(player->position, Vector3Scale(player->velocity, dt));
     player->velocity = Vector3Scale(player->velocity, damping);
 
     // --- lights ---
-    if (fabsf(player->velocity.x) > 10.0f) {
-        player->lights.items[0].enabled = true;
-        player->lights.items[1].enabled = true;
+    if (speed > 1.0f) {
+        player->lights.items[0].intensity = 1.0f;
+        player->lights.items[1].intensity = 1.0f;
     } else {
-        player->lights.items[0].enabled = false;
-        player->lights.items[1].enabled = false;
+        player->lights.items[0].intensity = speed / 1.f;
+        player->lights.items[1].intensity = speed / 1.f;
     }
 
     {

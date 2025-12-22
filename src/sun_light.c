@@ -1,6 +1,7 @@
 #include "game.h"
 #include "sun_light.h"
 #include <stdlib.h>
+#include <string.h>
 
 struct SunLight {
     Shader shader;
@@ -13,6 +14,7 @@ SunLight *sunlight_init
     float shininess
 ) {
     SunLight *sun = malloc(sizeof(SunLight));
+    memset(sun, 0, sizeof(SunLight));
     Shader shader = LoadShader(
             "./assets/shaders/glsl330/dirlight3d_vs.glsl",
             "./assets/shaders/glsl330/dirlight3d_fs.glsl");
